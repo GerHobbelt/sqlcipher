@@ -40,8 +40,13 @@
 #include "pager.h"
 #include "vdbeInt.h"
 
-#ifdef __ANDROID__
+#if !defined(SQLCIPHER_OMIT_LOG_DEVICE)
+#if defined(__ANDROID__)
 #include <android/log.h>
+#elif defined(__APPLE__)
+#include <TargetConditionals.h>
+#include <os/log.h>
+#endif
 #endif
 
 #include <time.h>
