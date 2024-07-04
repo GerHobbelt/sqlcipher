@@ -272,6 +272,8 @@ set(SQLCIPHER_MISC_SRC
 set(SQLCIPHER_INSTALL_HEADERS 
     ${SQLCIPHER_ROOT}/sqlite3.h
     ${SQLCIPHER_ROOT}/src/sqlite3_wcdb.h
+    ${SQLCIPHER_ROOT}/src/sqlcipher.h
+    ${SQLCIPHER_ROOT}/src/sqlite3ext.h
     ${SQLCIPHER_ROOT}/ext/fts3/fts3_tokenizer.h
 )
 file(COPY ${SQLCIPHER_INSTALL_HEADERS} DESTINATION ${SQLCIPHER_INSTALL_HEADER_DIR}/sqlcipher)

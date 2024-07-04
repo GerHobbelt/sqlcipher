@@ -29,13 +29,13 @@
 		23F0FDBC215F2473008399FB /* whereInt.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3A91FB0824C0075F021 /* whereInt.h */; };
 		23F0FDBD215F2473008399FB /* pragma.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3B71FB082A70075F021 /* pragma.h */; };
 		23F0FDBE215F2473008399FB /* opcodes.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3CC1FB082B30075F021 /* opcodes.h */; };
-		23F0FDBF215F2473008399FB /* sqlcipher.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3CE1FB082C20075F021 /* sqlcipher.h */; };
+		23F0FDBF215F2473008399FB /* sqlcipher.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3CE1FB082C20075F021 /* sqlcipher.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		23F0FDC0215F2473008399FB /* sqlite3rbu.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3D01FB082DA0075F021 /* sqlite3rbu.h */; };
 		23F0FDC1215F2473008399FB /* sqlite3userauth.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3D31FB082E40075F021 /* sqlite3userauth.h */; };
 		23F0FDC2215F2473008399FB /* crypto.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3EE1FB0836C0075F021 /* crypto.h */; };
 		23F0FDC3215F2473008399FB /* hash.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3F21FB0836D0075F021 /* hash.h */; };
 		23F0FDC4215F2473008399FB /* hwtime.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3F11FB0836D0075F021 /* hwtime.h */; };
-		23F0FDC5215F2473008399FB /* sqlite3ext.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3DB1FB083670075F021 /* sqlite3ext.h */; };
+		23F0FDC5215F2473008399FB /* sqlite3ext.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3DB1FB083670075F021 /* sqlite3ext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		23F0FDC6215F2473008399FB /* sqliteInt.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3EC1FB0836B0075F021 /* sqliteInt.h */; };
 		23F0FDC7215F2473008399FB /* sqliteLimit.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3F51FB0836E0075F021 /* sqliteLimit.h */; };
 		23F0FDC8215F2473008399FB /* vdbe.h in Headers */ = {isa = PBXBuildFile; fileRef = 232DA3DD1FB083670075F021 /* vdbe.h */; };
