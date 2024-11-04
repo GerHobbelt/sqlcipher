@@ -348,20 +348,20 @@ void sqlcipher_mlock(void *ptr, sqlite_uint64 sz) {
 
   if(ptr == NULL || sz == 0) return;
 
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_lock: calling mlock(%p,%lu); _SC_PAGESIZE=%lu", ptr - offset, sz + offset, pagesize);
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mlock: calling mlock(%p,%lu); _SC_PAGESIZE=%lu", ptr - offset, sz + offset, pagesize);
   rc = mlock(ptr - offset, sz + offset);
   if(rc!=0) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_lock: mlock() returned %d errno=%d", rc, errno);
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mem_lock: mlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mlock: mlock() returned %d errno=%d", rc, errno);
+    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mlock: mlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
   }
 #elif defined(_WIN32)
 #if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP))
   int rc;
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_lock: calling VirtualLock(%p,%d)", ptr, sz);
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mlock: calling VirtualLock(%p,%d)", ptr, sz);
   rc = VirtualLock(ptr, sz);
   if(rc==0) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_lock: VirtualLock() returned %d LastError=%d", rc, GetLastError());
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mem_lock: VirtualLock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
+    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mlock: VirtualLock() returned %d LastError=%d", rc, GetLastError());
+    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mlock: VirtualLock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
   }
 #endif
 #endif
@@ -377,20 +377,25 @@ void sqlcipher_munlock(void *ptr, sqlite_uint64 sz) {
 
   if(ptr == NULL || sz == 0) return;
 
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_unlock: calling munlock(%p,%lu)", ptr - offset, sz + offset);
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_munlock: calling munlock(%p,%lu)", ptr - offset, sz + offset);
   rc = munlock(ptr - offset, sz + offset);
   if(rc!=0) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_unlock: munlock() returned %d errno=%d", rc, errno);
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mem_unlock: munlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
+    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_munlock: munlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
   }
 #elif defined(_WIN32)
 #if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP))
   int rc;
-  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_mem_lock: calling VirtualUnlock(%p,%d)", ptr, sz);
+
+  if(ptr == NULL || sz == 0) return;
+
+  sqlcipher_log(SQLCIPHER_LOG_TRACE, "sqlcipher_munlock: calling VirtualUnlock(%p,%d)", ptr, sz);
   rc = VirtualUnlock(ptr, sz);
+
+  /* because memory allocations may be made from the same individual page, it is possible for VirtualUnlock to be called
+   * multiple times for the same page. Subsequent calls will return an error, but this can be safely ignored (i.e. because
+   * the previous call for that page unlocked the memory already). Log an info level event only in that case. */
   if(!rc) {
-    sqlcipher_log(SQLCIPHER_LOG_ERROR, "sqlcipher_mem_unlock: VirtualUnlock() returned %d LastError=%d", rc, GetLastError());
-    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_mem_unlock: VirtualUnlock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
+    sqlcipher_log(SQLCIPHER_LOG_INFO, "sqlcipher_munlock: VirtualUnlock(%p,%d) returned %d LastError=%d", ptr, sz, rc, GetLastError());
   }
 #endif
 #endif
@@ -468,10 +473,10 @@ static int sqlcipher_cipher_ctx_init(codec_ctx *ctx, cipher_ctx **iCtx) {
 static void sqlcipher_cipher_ctx_free(codec_ctx* ctx, cipher_ctx **iCtx) {
   cipher_ctx *c_ctx = *iCtx;
   sqlcipher_log(SQLCIPHER_LOG_DEBUG, "cipher_ctx_free: iCtx=%p", iCtx);
-  sqlcipher_free(c_ctx->key, ctx->key_sz);
-  sqlcipher_free(c_ctx->hmac_key, ctx->key_sz);
-  sqlcipher_free(c_ctx->pass, c_ctx->pass_sz);
-  sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
+  if(c_ctx->key) sqlcipher_free(c_ctx->key, ctx->key_sz);
+  if(c_ctx->hmac_key) sqlcipher_free(c_ctx->hmac_key, ctx->key_sz);
+  if(c_ctx->pass) sqlcipher_free(c_ctx->pass, c_ctx->pass_sz);
+  if(c_ctx->keyspec) sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
   sqlcipher_free(c_ctx, sizeof(cipher_ctx)); 
 }
 
@@ -542,8 +547,8 @@ static int sqlcipher_cipher_ctx_copy(codec_ctx *ctx, cipher_ctx *target, cipher_
   void *hmac_key = target->hmac_key; 
 
   sqlcipher_log(SQLCIPHER_LOG_DEBUG, "sqlcipher_cipher_ctx_copy: target=%p, source=%p", target, source);
-  sqlcipher_free(target->pass, target->pass_sz); 
-  sqlcipher_free(target->keyspec, ctx->keyspec_sz); 
+  if(target->pass) sqlcipher_free(target->pass, target->pass_sz);
+  if(target->keyspec) sqlcipher_free(target->keyspec, ctx->keyspec_sz);
   memcpy(target, source, sizeof(cipher_ctx));
 
   target->key = key; /* restore pointer to previously allocated key data */
@@ -573,7 +578,7 @@ static int sqlcipher_cipher_ctx_copy(codec_ctx *ctx, cipher_ctx *target, cipher_
   */
 static int sqlcipher_cipher_ctx_set_keyspec(codec_ctx *ctx, cipher_ctx *c_ctx, const unsigned char *key) {
   /* free, zero existing pointers and size */
-  sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
+  if(c_ctx->keyspec) sqlcipher_free(c_ctx->keyspec, ctx->keyspec_sz);
   c_ctx->keyspec = NULL;
 
   c_ctx->keyspec = sqlcipher_malloc(ctx->keyspec_sz);
@@ -613,7 +618,7 @@ static void sqlcipher_set_derive_key(codec_ctx *ctx, int derive) {
   */
 static int sqlcipher_cipher_ctx_set_pass(cipher_ctx *ctx, const void *zKey, int nKey) {
   /* free, zero existing pointers and size */
-  sqlcipher_free(ctx->pass, ctx->pass_sz);
+  if(ctx->pass) sqlcipher_free(ctx->pass, ctx->pass_sz);
   ctx->pass = NULL;
   ctx->pass_sz = 0;
 
@@ -846,7 +851,7 @@ int sqlcipher_codec_ctx_set_pagesize(codec_ctx *ctx, int size) {
     return SQLITE_ERROR;
   }
   /* attempt to free the existing page buffer */
-  sqlcipher_free(ctx->buffer,ctx->page_sz);
+  if(ctx->buffer) sqlcipher_free(ctx->buffer,ctx->page_sz);
   ctx->page_sz = size;
 
   /* pre-allocate a page buffer of PageSize bytes. This will
@@ -1025,12 +1030,14 @@ int sqlcipher_codec_ctx_init(codec_ctx **iCtx, Db *pDb, Pager *pPager, const voi
 void sqlcipher_codec_ctx_free(codec_ctx **iCtx) {
   codec_ctx *ctx = *iCtx;
   sqlcipher_log(SQLCIPHER_LOG_DEBUG, "codec_ctx_free: iCtx=%p", iCtx);
-  sqlcipher_free(ctx->kdf_salt, ctx->kdf_salt_sz);
-  sqlcipher_free(ctx->hmac_kdf_salt, ctx->kdf_salt_sz);
-  sqlcipher_free(ctx->buffer, ctx->page_sz);
+  if(ctx->kdf_salt) sqlcipher_free(ctx->kdf_salt, ctx->kdf_salt_sz);
+  if(ctx->hmac_kdf_salt) sqlcipher_free(ctx->hmac_kdf_salt, ctx->kdf_salt_sz);
+  if(ctx->buffer) sqlcipher_free(ctx->buffer, ctx->page_sz);
 
-  ctx->provider->ctx_free(&ctx->provider_ctx);
-  sqlcipher_free(ctx->provider, sizeof(sqlcipher_provider)); 
+  if(ctx->provider) {
+    ctx->provider->ctx_free(&ctx->provider_ctx);
+    sqlcipher_free(ctx->provider, sizeof(sqlcipher_provider));
+  }
 
   sqlcipher_cipher_ctx_free(ctx, &ctx->read_ctx);
   sqlcipher_cipher_ctx_free(ctx, &ctx->write_ctx);
