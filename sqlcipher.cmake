@@ -310,6 +310,12 @@ if(WIN32)
         set(CMAKE_C_FLAGS "-Wno-implicit-function-declaration")
         set(CMAKE_CXX_FLAGS "-Wno-implicit-function-declaration")
     endif()
+    add_compile_options(
+        $<$<CONFIG:>:/MT> #---------|
+        $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+        $<$<CONFIG:Release>:/MT> #--|
+        $<$<CONFIG:RelWithDebInfo>:/MT>
+    )
 else()
     target_compile_definitions(sqlcipher PRIVATE "SQLITE_API=__attribute__((visibility(\"default\")))")
     target_compile_options(sqlcipher PRIVATE -Wall -Wno-unused -fvisibility=hidden)
