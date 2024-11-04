@@ -305,17 +305,17 @@ else()
 endif()
 
 if(WIN32)
-    target_compile_options(sqlcipher PRIVATE /W4)
-    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        set(CMAKE_C_FLAGS "-Wno-implicit-function-declaration")
-        set(CMAKE_CXX_FLAGS "-Wno-implicit-function-declaration")
-    endif()
-    add_compile_options(
+    target_compile_options(sqlcipher PRIVATE 
+        /W4
         $<$<CONFIG:>:/MT> #---------|
         $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
         $<$<CONFIG:Release>:/MT> #--|
         $<$<CONFIG:RelWithDebInfo>:/MT>
     )
+    if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_C_FLAGS "-Wno-implicit-function-declaration")
+        set(CMAKE_CXX_FLAGS "-Wno-implicit-function-declaration")
+    endif()
 else()
     target_compile_definitions(sqlcipher PRIVATE "SQLITE_API=__attribute__((visibility(\"default\")))")
     target_compile_options(sqlcipher PRIVATE -Wall -Wno-unused -fvisibility=hidden)
