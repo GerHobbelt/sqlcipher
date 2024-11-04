@@ -284,7 +284,7 @@ static void sqlcipher_mlock(void *ptr, sqlite_uint64 sz) {
     sqlcipher_log(SQLCIPHER_LOG_INFO, SQLCIPHER_LOG_MEMORY, "sqlcipher_mlock: mlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
   }
 #elif defined(_WIN32)
-#if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP))
+#if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_PC_APP))
   int rc;
   sqlcipher_log(SQLCIPHER_LOG_TRACE, SQLCIPHER_LOG_MEMORY, "sqlcipher_mlock: calling VirtualLock(%p,%d)", ptr, sz);
   rc = VirtualLock(ptr, sz);
@@ -312,7 +312,7 @@ static void sqlcipher_munlock(void *ptr, sqlite_uint64 sz) {
     sqlcipher_log(SQLCIPHER_LOG_INFO, SQLCIPHER_LOG_MEMORY, "sqlcipher_munlock: munlock(%p,%lu) returned %d errno=%d", ptr - offset, sz + offset, rc, errno);
   }
 #elif defined(_WIN32)
-#if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_APP))
+#if !(defined(WINAPI_FAMILY) && (WINAPI_FAMILY == WINAPI_FAMILY_PHONE_APP || WINAPI_FAMILY == WINAPI_FAMILY_PC_APP))
   int rc;
 
   if(ptr == NULL || sz == 0) return;
@@ -1830,7 +1830,7 @@ void sqlcipher_log(unsigned int level, unsigned int source, const char *message,
   va_list params;
   va_start(params, message);
   char formatted[MAX_LOG_LEN];
-  int len = 0;
+  size_t len = 0;
 
 #ifdef CODEC_DEBUG
 #if defined(SQLCIPHER_OMIT_LOG_DEVICE) || (!defined(__ANDROID__) && !defined(__APPLE__))
@@ -1859,12 +1859,12 @@ void sqlcipher_log(unsigned int level, unsigned int source, const char *message,
 
   sqlite3_snprintf(MAX_LOG_LEN, formatted, "%s %s ", sqlcipher_get_log_level_str(level), sqlcipher_get_log_source_str(source));
   len = strlen(formatted);
-  sqlite3_vsnprintf(MAX_LOG_LEN - len, formatted + len, message, params);
+  sqlite3_vsnprintf(MAX_LOG_LEN - (int) len, formatted + (int) len, message, params);
 
 #if !defined(SQLCIPHER_OMIT_LOG_DEVICE)
   if(sqlcipher_log_device) {
 #if defined(__ANDROID__)
-    __android_log_print(ANDROID_LOG_DEBUG, "sqlcipher", formatted);
+    __android_log_write(ANDROID_LOG_DEBUG, "sqlcipher", formatted);
     goto end;
 #elif defined(__APPLE__)
     os_log(OS_LOG_DEFAULT, "%{public}s", formatted);
