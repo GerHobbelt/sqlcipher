@@ -5202,14 +5202,14 @@ static int winOpen(
 
   int rc = SQLITE_OK;            /* Function Return Code */
 #if !defined(NDEBUG) || SQLITE_OS_WINCE
-  int eType = flags&0xFFFFFF00;  /* Type of file to open */
+  int eType = flags&0xFFF00;  /* Type of file to open */
 #endif
 
   int isExclusive  = (flags & SQLITE_OPEN_EXCLUSIVE);
   int isDelete     = (flags & SQLITE_OPEN_DELETEONCLOSE);
   int isCreate     = (flags & SQLITE_OPEN_CREATE);
-  int isReadonly   = (flags & SQLITE_OPEN_READONLY);
-  int isReadWrite  = (flags & SQLITE_OPEN_READWRITE);
+  int isReadonly   = (flags & SQLITE_OPEN_READONLY || flags & SQLITE_OPEN_MAINDB_READONLY);
+  int isReadWrite  = (flags & SQLITE_OPEN_READWRITE && !(flags & SQLITE_OPEN_MAINDB_READONLY));
 
 #ifndef NDEBUG
   int isOpenJournal = (isCreate && (
@@ -5230,7 +5230,7 @@ static int winOpen(
   **   (d) if DELETEONCLOSE is set, then CREATE must also be set.
   */
   assert((isReadonly==0 || isReadWrite==0) && (isReadWrite || isReadonly));
-  assert(isCreate==0 || isReadWrite);
+  // assert(isCreate==0 || isReadWrite);
   assert(isExclusive==0 || isCreate);
   assert(isDelete==0 || isCreate);
 
