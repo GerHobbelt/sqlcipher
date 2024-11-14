@@ -5421,7 +5421,7 @@ static int winOpen(
   }
 
   if( pOutFlags ){
-    if( isReadWrite ){
+    if( flags & SQLITE_OPEN_READWRITE ) {
       *pOutFlags = SQLITE_OPEN_READWRITE;
     }else{
       *pOutFlags = SQLITE_OPEN_READONLY;
