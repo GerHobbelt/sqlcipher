@@ -307,13 +307,22 @@ else()
 endif()
 
 if(WIN32)
-    target_compile_options(sqlcipher PRIVATE 
-        /W4
-        $<$<CONFIG:>:/MT> #---------|
-        $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
-        $<$<CONFIG:Release>:/MT> #--|
-        $<$<CONFIG:RelWithDebInfo>:/MT>
-    )
+    target_compile_options(sqlcipher PRIVATE /W4)
+    if (BUILD_SHARED_LIBS)
+        target_compile_options(sqlcipher PRIVATE 
+            $<$<CONFIG:>:/MD> #---------|
+            $<$<CONFIG:Debug>:/MDd> #---|-- Dynamic link the runtime libraries
+            $<$<CONFIG:Release>:/MD> #--|
+            $<$<CONFIG:RelWithDebInfo>:/MD>
+        )
+    else ()
+        target_compile_options(sqlcipher PRIVATE 
+            $<$<CONFIG:>:/MT> #---------|
+            $<$<CONFIG:Debug>:/MTd> #---|-- Statically link the runtime libraries
+            $<$<CONFIG:Release>:/MT> #--|
+            $<$<CONFIG:RelWithDebInfo>:/MT>
+        )
+    endif()
     if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         set(CMAKE_C_FLAGS "-Wno-implicit-function-declaration")
         set(CMAKE_CXX_FLAGS "-Wno-implicit-function-declaration")
