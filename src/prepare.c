@@ -697,7 +697,9 @@ static int sqlite3LockAndPrepare(
 ){
   int rc;
   int cnt = 0;
-
+  if( !sqlite3SafetyCheckOk(db)||zSql==0 ){
+    return SQLITE_MISUSE_BKPT;
+  }
 #ifdef SQLITE_ENABLE_API_ARMOR
   if( ppStmt==0 ) return SQLITE_MISUSE_BKPT;
 #endif
@@ -705,9 +707,6 @@ static int sqlite3LockAndPrepare(
 #ifdef SQLITE_WCDB_SUSPEND
   if( db->suspended && !db->unimpeded ) return SQLITE_INTERRUPT;
 #endif
-  if( !sqlite3SafetyCheckOk(db)||zSql==0 ){
-    return SQLITE_MISUSE_BKPT;
-  }
   sqlite3_mutex_enter(db->mutex);
   sqlite3BtreeEnterAll(db);
   do{
